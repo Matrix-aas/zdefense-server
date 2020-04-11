@@ -1,0 +1,21 @@
+{
+  "name": "zdefense-server",
+  "version": "1.0.0",
+  "description": "ZDefense Game Server",
+  "scripts": {
+    "start": "tsc && node dist/app.js"
+  },
+  "keywords": [],
+  "author": "Matrix",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^3.8.3",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint": "^6.8.0"
+  },
+  "dependencies": {
+    "@types/ws": "^7.2.3",
+    "ws": "^7.2.3"
+  }
+}
