@@ -1,13 +1,40 @@
 import ArrayBufferStream from "../Network/ArrayBufferStream";
 import MathUtils from "./MathUtils";
+import * as Events from 'events';
 
 export default class Point {
-    public x: number;
-    public y: number;
+    private _x: number;
+    private _y: number;
+
+    private _eventBus = new Events.EventEmitter();
 
     constructor(x = 0, y = 0) {
         this.x = x;
         this.y = y;
+    }
+
+    public get x(): number {
+        return this._x;
+    }
+
+    public get y(): number {
+        return this._y;
+    }
+
+    public set x(value: number) {
+        this._eventBus.emit('x', value, this._x, this);
+        this._x = value;
+        this._eventBus.emit('change', this._x, this._y, this);
+    }
+
+    public set y(value: number) {
+        this._eventBus.emit('y', value, this._y, this);
+        this._y = value;
+        this._eventBus.emit('change', this._x, this._y, this);
+    }
+
+    public on(event: 'x' | 'y' | 'change', listener: (...args: any[]) => void): void {
+        this._eventBus.on(event, listener);
     }
 
     public static distance(point1: Point, point2: Point): number {
@@ -42,12 +69,12 @@ export default class Point {
         return res;
     }
 
-    public static writeToStream(point: Point, stream: ArrayBufferStream): void {
+    public static writeToBuffer(point: Point, stream: ArrayBufferStream): void {
         stream.writeFloat32(point.x);
         stream.writeFloat32(point.y);
     }
 
-    public static createFromStream(stream: ArrayBufferStream): Point {
+    public static createFromBuffer(stream: ArrayBufferStream): Point {
         return new Point(
             stream.readFloat32(),
             stream.readFloat32()
@@ -74,11 +101,13 @@ export default class Point {
         if (x instanceof Point) {
             this.x += x.x;
             this.y += x.y;
-        } else if (y === undefined) {
-            this.add(x, x);
         } else {
-            this.x += x;
-            this.y += y;
+            if (y === undefined) {
+                this.add(x, x);
+            } else {
+                this.x += x;
+                this.y += y;
+            }
         }
         return this;
     }
@@ -87,11 +116,13 @@ export default class Point {
         if (x instanceof Point) {
             this.x -= x.x;
             this.y -= x.y;
-        } else if (y === undefined) {
-            this.sub(x, x);
         } else {
-            this.x -= x;
-            this.y -= y;
+            if (y === undefined) {
+                this.sub(x, x);
+            } else {
+                this.x -= x;
+                this.y -= y;
+            }
         }
         return this;
     }
@@ -100,11 +131,13 @@ export default class Point {
         if (x instanceof Point) {
             this.x *= x.x;
             this.y *= x.y;
-        } else if (y === undefined) {
-            this.mul(x, x);
         } else {
-            this.x *= x;
-            this.y *= y;
+            if (y === undefined) {
+                this.mul(x, x);
+            } else {
+                this.x *= x;
+                this.y *= y;
+            }
         }
         return this;
     }
@@ -113,11 +146,13 @@ export default class Point {
         if (x instanceof Point) {
             this.x /= x.x;
             this.y /= x.y;
-        } else if (y === undefined) {
-            this.div(x, x);
         } else {
-            this.x /= x;
-            this.y /= y;
+            if (y === undefined) {
+                this.div(x, x);
+            } else {
+                this.x /= x;
+                this.y /= y;
+            }
         }
         return this;
     }
@@ -138,11 +173,11 @@ export default class Point {
         return Point.angle(this, another);
     }
 
-    public writeToStream(stream: ArrayBufferStream): void {
-        Point.writeToStream(this, stream);
+    public writeToBuffer(stream: ArrayBufferStream): void {
+        Point.writeToBuffer(this, stream);
     }
 
-    public readFromStream(stream: ArrayBufferStream): Point {
+    public readFromBuffer(stream: ArrayBufferStream): Point {
         this.x = stream.readFloat32();
         this.y = stream.readFloat32();
         return this;

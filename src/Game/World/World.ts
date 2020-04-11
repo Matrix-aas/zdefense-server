@@ -1,68 +1,58 @@
-import Server from "../Server";
-import PlayerInstance from "../Network/PlayerInstance";
-import ServerNetworkHandler from "../Network/ServerNetworkHandler";
-import Entity from "./Entity/Entity";
-import Point from "../Helpers/Point";
-import * as Event from "events";
+import Entity from "./Entities/Entity";
+import Point from "../../Helpers/Point";
+import registerEntityLivings from "./Entities/Livings";
 
 export interface NearestEntity {
     distance: number;
     entities: Entity[];
 }
 
-export default class World {
-    protected eventBus: Event.EventEmitter = new Event.EventEmitter();
-
-    protected server: Server = null;
-    protected players: Set<PlayerInstance> = new Set<PlayerInstance>();
+export default abstract class World {
+    public static readonly WORLD_VERSION = 1;
 
     protected generatedIds: Set<number> = new Set<number>();
     protected entities: Map<number, Entity> = new Map<number, Entity>();
+    protected spawnLocation: Point = new Point(0, 0);
+    protected spawnRadius: Point = new Point(50, 50);
 
-    constructor(server: Server) {
-        this.server = server;
-
-        this.server.subscribeEvent('client-handshaked', (player: PlayerInstance) => {
-            this.players.add(player);
-            this.server.serverSay(`${player.getUsername()} joined the game!`);
-        });
-
-        this.server.subscribeEvent('client-disconnected', (networkHandler: ServerNetworkHandler) => {
-            if (networkHandler.isOnline() && this.players.has(networkHandler.getPlayer())) {
-                this.players.delete(networkHandler.getPlayer());
-                this.server.serverSay(`${networkHandler.getPlayer().getUsername()} left the game!`);
-            }
-        });
+    public static async registerEntities(): Promise<void> {
+        await registerEntityLivings();
     }
-
 
     public genUniqId(): number {
         let id;
         do {
-            id = Math.floor(Math.random() * 65535)
+            id = Math.floor(Math.random() * 2147483647);
         } while (id <= 0 || this.generatedIds.has(id));
         this.generatedIds.add(id);
         return id;
     }
 
-    public spawnEntity(entity: Entity): Entity {
-        const identifer = this.genUniqId();
+    public spawnEntity(entity: Entity, id?: number): Entity {
+        const identifer = id ? id : this.genUniqId();
         entity.init(identifer, this);
         this.entities.set(identifer, entity);
-        this.fireEvent('entity-spawned', entity, this);
         return entity;
     }
 
-    public removeEntity(entity: Entity): void {
-        if (this.entities.has(entity.id)) {
-            this.entities.delete(entity.id);
-            this.generatedIds.delete(entity.id);
-            this.fireEvent('entity-removed', entity, this);
+    public removeEntity(entity: Entity | number): void {
+        const id = entity instanceof Entity ? entity.id : entity;
+        if (this.entities.has(id)) {
+            this.entities.delete(id);
+            this.generatedIds.delete(id);
         }
     }
 
     public entitiesCount(): number {
         return this.entities.size;
+    }
+
+    public getEntity(id: number): Entity {
+        return this.entities.has(id) ? this.entities.get(id) : null;
+    }
+
+    public getEntities(): Map<number, Entity> {
+        return this.entities;
     }
 
     public async tick(delta: number): Promise<void> {
@@ -73,6 +63,14 @@ export default class World {
                 this.removeEntity(entity);
             }
         });
+    }
+
+    public getSpawnLocation(): Point {
+        return this.spawnLocation;
+    }
+
+    public getSpawnRadius(): Point {
+        return this.spawnRadius;
     }
 
     public getEntitiesSortedByDistance(point: Point | Entity,
@@ -128,13 +126,5 @@ export default class World {
             };
         }
         return null;
-    }
-
-    public subscribeEvent(event: string, listener: (...args: any[]) => void): void {
-        this.eventBus.on(event, listener);
-    }
-
-    public fireEvent(event: string, ...args: any): void {
-        this.eventBus.emit(event, ...args);
     }
 }

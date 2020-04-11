@@ -26,7 +26,7 @@ export default class App {
         await this.socketServer.init();
     }
 
-    public get tickDelay() {
+    public get tickDelay(): number {
         return 1000 / this.ticksPerSecond;
     }
 
@@ -71,7 +71,11 @@ export default class App {
         this.onInterrupted();
     }
 
-    public static instance(): App {
+    public getServer(): Server {
+        return this.socketServer;
+    }
+
+    public static get instance(): App {
         if (!app) {
             app = new App();
         }
@@ -80,11 +84,11 @@ export default class App {
 }
 
 (async (): Promise<void> => {
-    await App.instance().init();
+    await App.instance.init();
 
-    App.instance().run();
+    App.instance.run();
 
     process.on('SIGINT', () => {
-        App.instance().terminate();
+        App.instance.terminate();
     });
 })();

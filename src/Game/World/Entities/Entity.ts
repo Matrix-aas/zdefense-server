@@ -1,13 +1,16 @@
 import World, {NearestEntity} from "../World";
 import * as Event from 'events';
-import Point from "../../Helpers/Point";
-import ArrayBufferStream from "../../Network/ArrayBufferStream";
+import Point from "../../../Helpers/Point";
+import ArrayBufferStream from "../../../Network/ArrayBufferStream";
 
 interface EntityInfo {
     typeId: number;
 }
 
 type EntityClass = new () => Entity;
+
+export class EntityNotDecorated extends Error {
+}
 
 export default abstract class Entity {
     private static readonly idToEntity: Map<number, EntityClass> = new Map<number, EntityClass>();
@@ -19,19 +22,13 @@ export default abstract class Entity {
     private world: World = null;
 
     protected position = new Point();
-    protected angle = 0;
+    protected _angle = 0;
 
     private health = 1;
     protected lastAttacker: Entity = null;
 
     constructor() {
-        this.subscribeEvent('heal', () => {
-//
-        });
-
-        this.subscribeEvent('damage', () => {
-//
-        });
+        //
     }
 
     public init(id: number, world: World): void {
@@ -106,12 +103,25 @@ export default abstract class Entity {
 
     public abstract get size(): Point;
 
+    protected onAngleChanged(): void {
+        //
+    }
+
+    protected get angle(): number {
+        return this._angle;
+    }
+
+    protected set angle(value: number) {
+        this._angle = value;
+        this.onAngleChanged();
+    }
+
     public getAngle(): number {
-        return this.angle;
+        return this._angle;
     }
 
     public setAngle(angle: number): void {
-        this.angle = angle;
+        this._angle = angle;
     }
 
     public teleport(point: Point): void {
@@ -131,11 +141,11 @@ export default abstract class Entity {
     }
 
     public getTypeId(): number {
-        return Entity.getEntityTypeId(Object.getPrototypeOf(this).constustor);
+        return Entity.getEntityTypeId(Object.getPrototypeOf(this).constructor);
     }
 
-    public writeEntityToStream(outputBuffer: ArrayBufferStream): void {
-        Entity.writeEntityToStream(this, outputBuffer);
+    public writeEntityToBuffer(outputBuffer: ArrayBufferStream): void {
+        Entity.writeEntityToBuffer(this, outputBuffer);
     }
 
     public getNearestEntity(type: typeof Entity = null,
@@ -150,7 +160,7 @@ export default abstract class Entity {
 
     public static getEntityInfo(entity: EntityClass): EntityInfo {
         if (!Object.prototype.hasOwnProperty.call(entity.prototype, 'entityTypeId')) {
-            throw new Error(`${entity.name} not decorated as entity`);
+            throw new EntityNotDecorated(`${entity.name} not decorated as entity`);
         }
 
         return {
@@ -193,7 +203,7 @@ export default abstract class Entity {
         return new (Entity.idToEntity.get(id))();
     }
 
-    public static createEntityFromBuffer(inputBuffer: ArrayBufferStream) {
+    public static createEntityFromBuffer(inputBuffer: ArrayBufferStream): Entity {
         if (inputBuffer == null) {
             throw new Error('Stream is null!');
         }
@@ -218,9 +228,11 @@ export default abstract class Entity {
             }
 
             entity._id = inputBuffer.readUInt();
-            entity.position.readFromStream(inputBuffer);
+            entity.position.readFromBuffer(inputBuffer);
+            entity.angle = inputBuffer.readFloat32();
+            entity.health = inputBuffer.readUInt();
 
-            entity.readDataFromStream(inputBuffer);
+            entity.readDataFromBuffer(inputBuffer);
         } catch (e) {
             console.warn(e);
             entity = null;
@@ -229,18 +241,25 @@ export default abstract class Entity {
         return entity;
     }
 
-    public static writeEntityToStream(entity: Entity, outputBuffer: ArrayBufferStream): void {
+    public static writeEntityToBuffer(entity: Entity, outputBuffer: ArrayBufferStream): void {
+        if (entity.getTypeId() < 0) {
+            throw new Error('Entity id can\'t be lower zero!');
+        }
         outputBuffer.writeUShort(entity.getTypeId());
         outputBuffer.writeUInt(entity.id);
-        entity.position.writeToStream(outputBuffer);
-        entity.writeDataToStream(outputBuffer);
+        entity.position.writeToBuffer(outputBuffer);
+        outputBuffer.writeFloat32(entity.angle);
+        outputBuffer.writeUInt(entity.health);
+        entity.writeDataToBuffer(outputBuffer);
     }
 
-    public readDataFromStream(inputBuffer: ArrayBufferStream): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public readDataFromBuffer(inputBuffer: ArrayBufferStream): void {
         //
     }
 
-    public writeDataToStream(outputBuffer: ArrayBufferStream): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public writeDataToBuffer(outputBuffer: ArrayBufferStream): void {
         //
     }
 }

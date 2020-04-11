@@ -100,6 +100,10 @@ export default class ArrayBufferStream {
         }
     }
 
+    public writeBoolean(value: boolean): void {
+        this.writeByte(value ? 1 : 0);
+    }
+
     public readByte(): number {
         if (!this.available()) {
             throw new Error('Reached end of stream');
@@ -149,5 +153,9 @@ export default class ArrayBufferStream {
             string += this.readChar();
         }
         return string;
+    }
+
+    public readBoolean(): boolean {
+        return this.readByte() !== 0;
     }
 }

@@ -1,8 +1,8 @@
-import {Packet, PacketInfo, PacketSide} from "./Packet";
+import {Packet, packet, PacketSide} from "./Packet";
 import ArrayBufferStream from "../ArrayBufferStream";
-import Entity from "../../Game/Entity/Entity";
+import Entity from "../../Game/World/Entities/Entity";
 
-@PacketInfo(4, PacketSide.CLIENT)
+@packet(4, PacketSide.CLIENT)
 export default class Packet4SpawnEnitity extends Packet {
     private data: ArrayBufferStream;
     private _entity: Entity = null;
@@ -10,6 +10,10 @@ export default class Packet4SpawnEnitity extends Packet {
     constructor(entity?: Entity) {
         super();
         this._entity = entity || null;
+        if (this._entity) {
+            this.data = new ArrayBufferStream();
+            this._entity.writeEntityToBuffer(this.data);
+        }
     }
 
     public readData(buffer: ArrayBufferStream): void {

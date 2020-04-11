@@ -41,4 +41,8 @@ export default class MathUtils {
         }
         return angleTarget;
     }
+
+    public static random(min: number, max?: number): number {
+        return Math.floor((max === undefined || max === null) ? (Math.random() * min) : (min + Math.random() * (max + 1 - min)));
+    }
 }

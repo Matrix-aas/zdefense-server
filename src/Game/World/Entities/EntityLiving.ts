@@ -1,14 +1,13 @@
 import Entity from "./Entity";
-import MathUtils from "../../Helpers/MathUtils";
-import ArrayBufferStream from "../../Network/ArrayBufferStream";
+import MathUtils from "../../../Helpers/MathUtils";
+import ArrayBufferStream from "../../../Network/ArrayBufferStream";
 
 export default abstract class EntityLiving extends Entity {
     protected defaultSpeed = 0;
     protected currentSpeed = 0;
 
-    protected headAngle = 0;
-    protected moveAngle = 0;
-    protected strafeAngle = 0;
+    protected _headAngle = 0;
+    protected _strafeAngle = 0;
 
     tick(delta: number): void {
         super.tick(delta);
@@ -16,11 +15,36 @@ export default abstract class EntityLiving extends Entity {
         this.position.add(Math.cos(angle) * this.currentSpeed / delta, Math.sin(angle) * this.currentSpeed * delta);
     }
 
+    protected get moveAngle(): number {
+        return this.angle;
+    }
+
+    protected set moveAngle(value: number) {
+        this.angle = value;
+    }
+
+    protected get headAngle(): number {
+        return this._headAngle;
+    }
+
+    protected set headAngle(value: number) {
+        this._headAngle = value;
+    }
+
+    protected get strafeAngle(): number {
+        return this._strafeAngle;
+    }
+
+    protected set strafeAngle(value: number) {
+        this._strafeAngle = value;
+    }
+
     public setMove(moving: boolean): void {
-        if (moving)
+        if (moving) {
             this.move();
-        else
+        } else {
             this.stop();
+        }
     }
 
     public move(): void {
@@ -83,21 +107,19 @@ export default abstract class EntityLiving extends Entity {
         return this.currentSpeed > 0.0;
     }
 
-    readDataFromStream(inputBuffer: ArrayBufferStream): void {
-        super.readDataFromStream(inputBuffer);
+    readDataFromBuffer(inputBuffer: ArrayBufferStream): void {
+        super.readDataFromBuffer(inputBuffer);
         this.defaultSpeed = inputBuffer.readFloat32();
         this.currentSpeed = inputBuffer.readFloat32();
         this.headAngle = inputBuffer.readFloat32();
-        this.moveAngle = inputBuffer.readFloat32();
         this.strafeAngle = inputBuffer.readFloat32();
     }
 
-    writeDataToStream(outputBuffer: ArrayBufferStream): void {
-        super.writeDataToStream(outputBuffer);
+    writeDataToBuffer(outputBuffer: ArrayBufferStream): void {
+        super.writeDataToBuffer(outputBuffer);
         outputBuffer.writeFloat32(this.defaultSpeed);
         outputBuffer.writeFloat32(this.currentSpeed);
         outputBuffer.writeFloat32(this.headAngle);
-        outputBuffer.writeFloat32(this.moveAngle);
         outputBuffer.writeFloat32(this.strafeAngle);
     }
 }

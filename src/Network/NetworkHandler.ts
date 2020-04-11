@@ -1,42 +1,38 @@
 import * as WebSocket from 'ws';
 import ArrayBufferStream from "./ArrayBufferStream";
 import {Packet, PacketSide} from "./Packets/Packet";
-import * as http from "http";
 import Packet255Kicked from "./Packets/Packet255Kicked";
-import Server from "../Server";
 
 class UnknownMessageTypeError extends Error {
 }
 
 export default abstract class NetworkHandler {
-    private server: Server = null;
-    private socket: WebSocket = null;
-    private webRequest: http.IncomingMessage = null;
+    protected socket: WebSocket = null;
+    private address: string;
 
     private packetsToProcess: Packet[] = [];
     private packetsToSend: Packet[] = [];
 
-    constructor(server: Server, webSocket: WebSocket, webRequest: http.IncomingMessage) {
-        this.server = server;
+    constructor(webSocket: WebSocket, address: string) {
         this.socket = webSocket;
-        this.webRequest = webRequest;
+        this.address = address;
 
-        if (this.server.getAvailableSlots() < 1) {
-            this.kick('Server is full!');
-        } else {
-            this.socket.on('message', (message: WebSocket.Data) => {
-                try {
-                    this.handleMessage(message);
-                } catch (e) {
-                    this._onError(e);
-                }
-            });
+        this.socket.on('message', (message: WebSocket.Data) => {
+            try {
+                this.handleMessage(message);
+            } catch (e) {
+                this._onError(e);
+            }
+        });
 
-            this.socket.on('close', this._onDisconnect.bind(this));
-            this.socket.on('error', this._onError.bind(this));
+        this.socket.on('close', this.onDisconnect.bind(this));
+        this.socket.on('error', this._onError.bind(this));
 
-            this._onConnect();
-        }
+        this.onConnect();
+    }
+
+    public getAddress(): string {
+        return this.address;
     }
 
     public isConnected(): boolean {
@@ -56,18 +52,8 @@ export default abstract class NetworkHandler {
         }
     }
 
-    private _onConnect(): void {
-        this.server.fireEvent('client-connected', this);
-        this.onConnect();
-    }
-
     public onConnect(): void {
         //
-    }
-
-    private _onDisconnect(): void {
-        this.server.fireEvent('client-disconnected', this);
-        this.onDisconnect();
     }
 
     public onDisconnect(): void {
@@ -80,12 +66,11 @@ export default abstract class NetworkHandler {
             return;
         }
 
-        this.server.fireEvent('client-error', this, e);
-
         this.onError(e);
         this.close();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public onError(e: Error): void {
         //
     }
@@ -100,7 +85,11 @@ export default abstract class NetworkHandler {
         }
 
         const packet = Packet.createPacketFromStream(new ArrayBufferStream(message), PacketSide.SERVER);
-        this.packetsToProcess.push(packet);
+        if (packet.isPacketImmediately()) {
+            this.handlePacket(packet);
+        } else {
+            this.packetsToProcess.push(packet);
+        }
     }
 
     public async process(): Promise<void> {
@@ -108,13 +97,14 @@ export default abstract class NetworkHandler {
             return;
         }
 
+        await this.networkTick();
+
         let processDone = false;
 
         const processThread = async (): Promise<void> => {
             let packet;
             while (this.isConnected() && (packet = this.packetsToProcess.shift()) instanceof Packet) {
                 try {
-                    this.server.fireEvent('client-packet-recieved', packet, this);
                     this.handlePacket(packet);
                 } catch (e) {
                     this._onError(e);
@@ -131,7 +121,6 @@ export default abstract class NetworkHandler {
                     while (this.isConnected() && (packet = this.packetsToSend.shift()) instanceof Packet) {
                         try {
                             this.sendPacketToSocket(packet);
-                            this.server.fireEvent('client-packet-sended', packet, this);
                         } catch (e) {
                             this._onError(e);
                         }
@@ -152,6 +141,10 @@ export default abstract class NetworkHandler {
 
     protected abstract handlePacket(packet: Packet): void;
 
+    protected async networkTick(): Promise<void> {
+        //
+    }
+
     public addPacketToQueue(packet: Packet): void {
         if (!this.isConnected()) {
             return;
@@ -166,14 +159,6 @@ export default abstract class NetworkHandler {
 
     private sendPacketToSocket(packet: Packet): void {
         NetworkHandler.sendPacketToSocket(packet, this.socket);
-    }
-
-    public getServer(): Server {
-        return this.server;
-    }
-
-    public getWebRequest(): http.IncomingMessage {
-        return this.webRequest;
     }
 
     public static sendPacketToSocket(packet: Packet, socket: WebSocket): void {

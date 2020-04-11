@@ -1,7 +1,7 @@
-import {Packet, PacketInfo, PacketSide} from "./Packet";
+import {Packet, packet, PacketSide} from "./Packet";
 import ArrayBufferStream from "../ArrayBufferStream";
 
-@PacketInfo(3, [PacketSide.CLIENT, PacketSide.SERVER])
+@packet(3, [PacketSide.CLIENT, PacketSide.SERVER])
 export default class Packet3Chat extends Packet {
     private message: string;
 

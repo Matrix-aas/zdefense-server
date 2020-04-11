@@ -8,6 +8,7 @@ export enum PacketSide {
 interface PacketInfo {
     id: number;
     side: PacketSide[];
+    immediately: boolean;
 }
 
 type PacketClass = new () => Packet;
@@ -25,13 +26,16 @@ export abstract class Packet {
 
     public static getPacketInfo(packet: PacketClass): PacketInfo {
         if (!Object.prototype.hasOwnProperty.call(packet.prototype, 'packetId') ||
-            !Object.prototype.hasOwnProperty.call(packet.prototype, 'packetSide')) {
+            !Object.prototype.hasOwnProperty.call(packet.prototype, 'packetSide') ||
+            !Object.prototype.hasOwnProperty.call(packet.prototype, 'packetImmediately')
+        ) {
             throw new Error(`${packet.name} not decorated with PacketInfo`);
         }
 
         return {
             id: packet.prototype.packetId,
-            side: packet.prototype.packetSide
+            side: packet.prototype.packetSide,
+            immediately: packet.prototype.packetImmediately,
         } as PacketInfo;
     }
 
@@ -65,6 +69,10 @@ export abstract class Packet {
 
     public static getPacketSide(packet: PacketClass): PacketSide[] {
         return Packet.getPacketInfo(packet).side;
+    }
+
+    public static isPacketImmediately(packet: PacketClass): boolean {
+        return Packet.getPacketInfo(packet).immediately;
     }
 
     public static createPacket(id: number): Packet {
@@ -172,6 +180,10 @@ export abstract class Packet {
         return Packet.getPacketSide(Object.getPrototypeOf(this).constructor);
     }
 
+    public isPacketImmediately(): boolean {
+        return Packet.isPacketImmediately(Object.getPrototypeOf(this).constructor);
+    }
+
     public abstract readData(buffer: ArrayBufferStream): void;
 
     public abstract writeData(buffer: ArrayBufferStream): void;
@@ -194,9 +206,10 @@ export abstract class Packet {
     }
 }
 
-export function PacketInfo(id: number, side: PacketSide | PacketSide[]) {
+export function packet(id: number, side: PacketSide | PacketSide[], immediately = false) {
     return function (constructor: Function): any {
         constructor.prototype.packetId = id;
         constructor.prototype.packetSide = Array.isArray(side) ? side : [side];
+        constructor.prototype.packetImmediately = immediately;
     };
 }

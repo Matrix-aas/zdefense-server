@@ -1,7 +1,7 @@
-import {Packet, PacketInfo, PacketSide} from "./Packet";
+import {Packet, packet, PacketSide} from "./Packet";
 import ArrayBufferStream from "../ArrayBufferStream";
 
-@PacketInfo(1, PacketSide.SERVER)
+@packet(1, PacketSide.SERVER)
 export default class Packet1Handshake extends Packet {
     public static readonly MAX_USERNAME_LEN = 32;
 
