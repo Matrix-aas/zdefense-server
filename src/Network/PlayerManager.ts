@@ -9,6 +9,9 @@ import Packet2WorldInfo from "./Packets/Packet2WorldInfo";
 import World from "../Game/World/World";
 import App from "../app";
 import Packet4SpawnEnitity from "./Packets/Packet4SpawnEnitity";
+import Entity from "../Game/World/Entities/Entity";
+import Packet6MoveEntity from "./Packets/Packet6MoveEntity";
+import EntityLiving from "../Game/World/Entities/EntityLiving";
 
 export default class PlayerManager {
     protected players: EntityPlayerMP[] = [];
@@ -77,6 +80,24 @@ export default class PlayerManager {
         this.server.getWorld().getEntities().forEach(entity => {
             player.getNetworkHandler().addPacketToQueue(new Packet4SpawnEnitity(entity));
         });
+    }
+
+    public sendEntityMove(entity: Entity, teleport: boolean): void {
+        const packet = new Packet6MoveEntity();
+        packet.push(entity, teleport);
+        this.sendPacketToAll(packet);
+    }
+
+    public sendAllMovesToAllPlayers(): void {
+        const packet = new Packet6MoveEntity();
+        this.server.getWorld().getEntities().forEach(entity => {
+            if (entity instanceof EntityLiving) {
+                packet.push(entity, false);
+            }
+        });
+        if (!packet.isEmpty()) {
+            this.sendPacketToAll(packet);
+        }
     }
 
     public get server(): Server {

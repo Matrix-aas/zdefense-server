@@ -2,6 +2,7 @@ import World, {NearestEntity} from "../World";
 import * as Event from 'events';
 import Point from "../../../Helpers/Point";
 import ArrayBufferStream from "../../../Network/ArrayBufferStream";
+import App from "../../../app";
 
 interface EntityInfo {
     typeId: number;
@@ -97,6 +98,10 @@ export default abstract class Entity {
         //
     }
 
+    public getPosition(): Point {
+        return this.position;
+    }
+
     public get positionCenter(): Point {
         return this.position.clone().add(this.size.clone().div(2));
     }
@@ -126,6 +131,7 @@ export default abstract class Entity {
 
     public teleport(point: Point): void {
         this.position.copyFrom(point);
+        App.instance.getServer().getPlayerManager().sendEntityMove(this, true);
     }
 
     public subscribeEvent(event: string, listener: (...args: any[]) => void): void {

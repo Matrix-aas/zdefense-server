@@ -66,7 +66,7 @@ export default class Point {
                 res = (Math.PI - res + Math.PI);
             }
         }
-        return res;
+        return MathUtils.toDegree(res);
     }
 
     public static writeToBuffer(point: Point, stream: ArrayBufferStream): void {

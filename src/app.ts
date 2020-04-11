@@ -53,7 +53,7 @@ export default class App {
         ++this.currentTick;
         ++this.currentTickInSecond;
 
-        await this.tick(this.tickDelay - this.lastTickDelay);
+        await this.tick(this.lastTickDelay / this.tickDelay);
 
         setTimeout(this.run.bind(this), this.tickDelay);
     }
@@ -73,6 +73,10 @@ export default class App {
 
     public getServer(): Server {
         return this.socketServer;
+    }
+
+    public getCurrentTick(): number {
+        return this.currentTick;
     }
 
     public static get instance(): App {

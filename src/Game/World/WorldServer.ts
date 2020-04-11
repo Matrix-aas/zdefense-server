@@ -30,6 +30,14 @@ export default class WorldServer extends World {
         this.server.getPlayerManager().sendPacketToAll(new Packet5DamageEntity(id, 0, 0, 0, true));
     }
 
+    async tick(delta: number): Promise<void> {
+        await super.tick(delta);
+
+        if (App.instance.getCurrentTick() % 4 === 0) {
+            this.server.getPlayerManager().sendAllMovesToAllPlayers();
+        }
+    }
+
     public get server(): Server {
         return App.instance.getServer();
     }
