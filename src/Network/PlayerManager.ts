@@ -34,7 +34,7 @@ export default class PlayerManager {
         this.players.push(player);
 
         this.server.getWorld().spawnEntity(player);
-        this.sendAllEntitiesToPlayer(player);
+        this.sendAllEntitiesToPlayer(player, player);
 
         networkHandler.addPacketToQueue(new Packet2WorldInfo(World.WORLD_VERSION, player.id));
 
@@ -56,7 +56,7 @@ export default class PlayerManager {
     }
 
     public getPlayerIndex(player: EntityPlayerMP): number {
-        return this.players.findIndex(_player => player === _player);
+        return this.players.findIndex(_player => player.id === _player.id);
     }
 
     public sendPacketToAll(packet: Packet, except: EntityPlayerMP | EntityPlayerMP[] = []): void {
@@ -76,9 +76,14 @@ export default class PlayerManager {
         console.log(`[CHAT] ${message}`);
     }
 
-    public sendAllEntitiesToPlayer(player: EntityPlayerMP): void {
+    public sendAllEntitiesToPlayer(player: EntityPlayerMP, except: Entity | Entity[] = []): void {
+        if (!Array.isArray(except)) {
+            except = [except];
+        }
         this.server.getWorld().getEntities().forEach(entity => {
-            player.getNetworkHandler().addPacketToQueue(new Packet4SpawnEnitity(entity));
+            if ((except as Entity[]).indexOf(entity) < 0) {
+                player.getNetworkHandler().addPacketToQueue(new Packet4SpawnEnitity(entity));
+            }
         });
     }
 

@@ -47,12 +47,20 @@ export default abstract class World {
         return this.entities.size;
     }
 
+    public hasEntity(id: Entity | number): boolean {
+        return this.entities.has(id instanceof Entity ? id.id : id);
+    }
+
     public getEntity(id: number): Entity {
         return this.entities.has(id) ? this.entities.get(id) : null;
     }
 
     public getEntities(): Map<number, Entity> {
         return this.entities;
+    }
+
+    public getEntitiesCount(): number {
+        return this.entities.size;
     }
 
     public async tick(delta: number): Promise<void> {

@@ -1,11 +1,15 @@
 import EntityLiving from "../EntityLiving";
 import {entity} from "../Entity";
-import Point from "../../../../Helpers/Point";
+import App from "../../../../app";
+import MathUtils from "../../../../Helpers/MathUtils";
 
 @entity(1)
 export default class EntityZombie extends EntityLiving {
+    private targetAngle = 0;
+
     constructor() {
         super();
+        this.size.set(32, 32);
         this.setSpeed(0.75);
     }
 
@@ -13,16 +17,14 @@ export default class EntityZombie extends EntityLiving {
         return 100;
     }
 
-    get size(): Point {
-        return new Point(32, 32);
-    }
-
     tick(delta: number): void {
         super.tick(delta);
 
-        const angle = this.getHeadAngle() - 20.0 + Math.random() * 40.0;
-        this.setHeadAngleSmoothly(angle, 5.0 * 0.5);
-        this.setMoveAngleSmoothly(angle, 5.0 * 0.5);
+        if (App.instance.getCurrentTick() % 60 * 4 === 0) {
+            this.targetAngle += MathUtils.random(-20, 40);
+        }
+        this.setHeadAngleSmoothly(this.targetAngle, 1.5);
+        this.setMoveAngleSmoothly(this.targetAngle, 1.5);
         this.move();
         return;
     }

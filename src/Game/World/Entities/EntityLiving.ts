@@ -7,6 +7,7 @@ export default abstract class EntityLiving extends Entity {
     protected currentSpeed = 0;
 
     protected _headAngle = 0;
+    protected _moveAngle = 0;
     protected _strafeAngle = 0;
 
     tick(delta: number): void {
@@ -19,11 +20,11 @@ export default abstract class EntityLiving extends Entity {
     }
 
     protected get moveAngle(): number {
-        return this.angle;
+        return this._moveAngle;
     }
 
     protected set moveAngle(value: number) {
-        this.angle = value;
+        this._moveAngle = value;
         this.onMoveAngleChange();
     }
 
@@ -130,6 +131,7 @@ export default abstract class EntityLiving extends Entity {
         this.defaultSpeed = inputBuffer.readFloat32();
         this.currentSpeed = inputBuffer.readFloat32();
         this.headAngle = inputBuffer.readFloat32();
+        this.moveAngle = inputBuffer.readFloat32();
         this.strafeAngle = inputBuffer.readFloat32();
     }
 
@@ -138,6 +140,7 @@ export default abstract class EntityLiving extends Entity {
         outputBuffer.writeFloat32(this.defaultSpeed);
         outputBuffer.writeFloat32(this.currentSpeed);
         outputBuffer.writeFloat32(this.headAngle);
+        outputBuffer.writeFloat32(this.moveAngle);
         outputBuffer.writeFloat32(this.strafeAngle);
     }
 }

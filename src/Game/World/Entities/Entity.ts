@@ -17,13 +17,13 @@ export default abstract class Entity {
     private static readonly idToEntity: Map<number, EntityClass> = new Map<number, EntityClass>();
     private static readonly entityToId: Map<EntityClass, number> = new Map<EntityClass, number>();
 
-    private eventBus: Event.EventEmitter = new Event.EventEmitter();
+    private readonly eventBus: Event.EventEmitter = new Event.EventEmitter();
 
     private _id = -1;
     private world: World = null;
 
-    protected position = new Point();
-    protected _angle = 0;
+    public readonly position = new Point();
+    public readonly size = new Point();
 
     private health = 1;
     protected lastAttacker: Entity = null;
@@ -98,35 +98,12 @@ export default abstract class Entity {
         //
     }
 
-    public getPosition(): Point {
-        return this.position;
-    }
-
     public get positionCenter(): Point {
-        return this.position.clone().add(this.size.clone().div(2));
+        return this.position.clone().add(this.size.x / 2, this.size.y / 2);
     }
-
-    public abstract get size(): Point;
 
     protected onAngleChanged(): void {
         //
-    }
-
-    protected get angle(): number {
-        return this._angle;
-    }
-
-    protected set angle(value: number) {
-        this._angle = value;
-        this.onAngleChanged();
-    }
-
-    public getAngle(): number {
-        return this._angle;
-    }
-
-    public setAngle(angle: number): void {
-        this._angle = angle;
     }
 
     public teleport(point: Point): void {
@@ -235,7 +212,6 @@ export default abstract class Entity {
 
             entity._id = inputBuffer.readUInt();
             entity.position.readFromBuffer(inputBuffer);
-            entity.angle = inputBuffer.readFloat32();
             entity.health = inputBuffer.readUInt();
 
             entity.readDataFromBuffer(inputBuffer);
@@ -254,7 +230,6 @@ export default abstract class Entity {
         outputBuffer.writeUShort(entity.getTypeId());
         outputBuffer.writeUInt(entity.id);
         entity.position.writeToBuffer(outputBuffer);
-        outputBuffer.writeFloat32(entity.angle);
         outputBuffer.writeUInt(entity.health);
         entity.writeDataToBuffer(outputBuffer);
     }

@@ -102,8 +102,12 @@ export default class Server {
         return this.clients;
     }
 
+    public getOccupiedSlots(): number {
+        return this.clients.length;
+    }
+
     public getAvailableSlots(): number {
-        return this.availableSlots - this.getClients().length;
+        return this.availableSlots - this.clients.length;
     }
 
     public getMaxAvailableSlots(): number {

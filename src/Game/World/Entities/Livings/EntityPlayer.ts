@@ -1,17 +1,17 @@
 import EntityLiving from "../EntityLiving";
-import Point from "../../../../Helpers/Point";
 import ArrayBufferStream from "../../../../Network/ArrayBufferStream";
 import {Packet} from "../../../../Network/Packets/Packet";
 
 export default class EntityPlayer extends EntityLiving {
     protected username: string;
 
-    public getMaxHealth(): number {
-        return 100;
+    constructor() {
+        super();
+        this.size.set(32, 32);
     }
 
-    public get size(): Point {
-        return new Point(32, 32);
+    public getMaxHealth(): number {
+        return 100;
     }
 
     public getUsername(): string {

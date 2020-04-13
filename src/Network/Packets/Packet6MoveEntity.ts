@@ -22,7 +22,7 @@ export default class Packet6MoveEntity extends Packet {
     public push(entityId?: number | Entity, position?: Point | boolean, speed?: number, headAngle?: number, moveAngle?: number, strafeAngle?: number, moving?: boolean, teleport?: boolean): void {
         if (entityId instanceof Entity) {
             const _entityId = entityId.id;
-            const _position = entityId.getPosition().clone();
+            const _position = entityId.position.clone();
             let _speed = 0.0;
             let _moveAngle = 0.0;
             let _headAngle = 0.0;
@@ -34,8 +34,6 @@ export default class Packet6MoveEntity extends Packet {
                 _headAngle = entityId.getHeadAngle();
                 _strafeAngle = entityId.getStrafeAngle();
                 _moving = entityId.isMoving();
-            } else if (entityId instanceof Entity) {
-                _moveAngle = entityId.getAngle();
             }
             const _teleport = typeof position === 'boolean' ? position : false;
             this.moves.push({

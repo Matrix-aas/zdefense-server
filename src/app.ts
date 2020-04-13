@@ -48,6 +48,13 @@ export default class App {
             this.realTickPerSecond = this.currentTickInSecond;
             this.currentTickInSecond = 0;
             this.lastTickSecond = millis;
+
+            process.stdout.write(
+                `\rTPS: ${this.realTickPerSecond}, ` +
+                `Delay: ${this.lastTickDelay}ms, ` +
+                `Slots: ${this.getServer().getOccupiedSlots()}/${this.getServer().getMaxAvailableSlots()}, ` +
+                `Entities: ${this.getServer().getWorld().getEntitiesCount()}             `
+            );
         }
 
         ++this.currentTick;

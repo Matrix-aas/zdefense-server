@@ -4,7 +4,6 @@ import Server from "../../Server";
 import App from "../../app";
 import Packet4SpawnEnitity from "../../Network/Packets/Packet4SpawnEnitity";
 import Packet5DamageEntity from "../../Network/Packets/Packet5DamageEntity";
-import EntityPlayer from "./Entities/Livings/EntityPlayer";
 import EntityZombie from "./Entities/Livings/EntityZombie";
 import Point from "../../Helpers/Point";
 
@@ -18,9 +17,7 @@ export default class WorldServer extends World {
 
     spawnEntity(entity: Entity, id?: number): Entity {
         super.spawnEntity(entity, id);
-        if (!(entity instanceof EntityPlayer)) {
-            this.server.getPlayerManager().sendPacketToAll(new Packet4SpawnEnitity(entity));
-        }
+        this.server.getPlayerManager().sendPacketToAll(new Packet4SpawnEnitity(entity));
         return entity;
     }
 
