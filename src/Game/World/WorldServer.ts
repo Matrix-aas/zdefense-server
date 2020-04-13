@@ -5,14 +5,11 @@ import App from "../../app";
 import Packet4SpawnEnitity from "../../Network/Packets/Packet4SpawnEnitity";
 import Packet5DamageEntity from "../../Network/Packets/Packet5DamageEntity";
 import EntityZombie from "./Entities/Livings/EntityZombie";
-import Point from "../../Helpers/Point";
+import MathUtils from "../../Helpers/MathUtils";
 
 export default class WorldServer extends World {
     constructor() {
         super();
-        this.spawnEntity(new EntityZombie()).teleport(new Point(50, 50));
-        this.spawnEntity(new EntityZombie()).teleport(new Point(150, 150));
-        this.spawnEntity(new EntityZombie()).teleport(new Point(250, 250));
     }
 
     spawnEntity(entity: Entity, id?: number): Entity {
@@ -29,6 +26,19 @@ export default class WorldServer extends World {
 
     async tick(delta: number): Promise<void> {
         await super.tick(delta);
+
+        if (App.instance.getCurrentTick() % 4 === 0) {
+            for (const player of this.server.getPlayerManager().getPlayers()) {
+                if (Math.random() > 0.95) {
+                    const randPos = player.positionCenter.add(MathUtils.random(-400, 400));
+                    const e = this.spawnEntity(new EntityZombie()) as EntityZombie;
+                    e.position.set(randPos.x, randPos.y);
+                    const angle = MathUtils.randomAngle();
+                    e.setHeadAngle(angle);
+                    e.setMoveAngle(angle);
+                }
+            }
+        }
 
         if (App.instance.getCurrentTick() % 4 === 0) {
             this.server.getPlayerManager().sendAllMovesToAllPlayers();

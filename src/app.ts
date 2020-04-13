@@ -86,6 +86,10 @@ export default class App {
         return this.currentTick;
     }
 
+    public getTicksPerSecond(): number {
+        return this.ticksPerSecond;
+    }
+
     public static get instance(): App {
         if (!app) {
             app = new App();

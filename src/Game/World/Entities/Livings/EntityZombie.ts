@@ -6,11 +6,14 @@ import MathUtils from "../../../../Helpers/MathUtils";
 @entity(1)
 export default class EntityZombie extends EntityLiving {
     private targetAngle = 0;
+    private ttl = 0;
 
     constructor() {
         super();
         this.size.set(32, 32);
         this.setSpeed(0.75);
+        this.ttl = MathUtils.random(10, 20) * App.instance.getTicksPerSecond();
+        this.targetAngle = MathUtils.randomAngle();
     }
 
     getMaxHealth(): number {
@@ -20,12 +23,15 @@ export default class EntityZombie extends EntityLiving {
     tick(delta: number): void {
         super.tick(delta);
 
-        if (App.instance.getCurrentTick() % 60 * 4 === 0) {
-            this.targetAngle += MathUtils.random(-20, 40);
+        if (this.ttl-- > 0) {
+            if (App.instance.getCurrentTick() % App.instance.getTicksPerSecond() * 4 === 0) {
+                this.targetAngle += MathUtils.random(-20, 40);
+            }
+            this.setHeadAngleSmoothly(this.targetAngle, 1.5);
+            this.setMoveAngleSmoothly(this.targetAngle, 1.5);
+            this.move();
+        } else if (!this.isDied()) {
+            this.kill();
         }
-        this.setHeadAngleSmoothly(this.targetAngle, 1.5);
-        this.setMoveAngleSmoothly(this.targetAngle, 1.5);
-        this.move();
-        return;
     }
 }

@@ -105,6 +105,10 @@ export default class PlayerManager {
         }
     }
 
+    public getPlayers(): EntityPlayerMP[] {
+        return this.players;
+    }
+
     public get server(): Server {
         return App.instance.getServer();
     }

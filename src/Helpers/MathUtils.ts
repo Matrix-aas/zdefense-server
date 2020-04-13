@@ -43,4 +43,8 @@ export default class MathUtils {
     public static random(min: number, max?: number): number {
         return Math.floor((max === undefined || max === null) ? (Math.random() * min) : (min + Math.random() * (max + 1 - min)));
     }
+
+    public static randomAngle(): number {
+        return MathUtils.random(0, 360);
+    }
 }
