@@ -88,16 +88,19 @@ export default class PlayerManager {
     }
 
     public sendEntityMove(entity: Entity, teleport: boolean): void {
-        const packet = new Packet6MoveEntity();
-        packet.push(entity, teleport);
-        this.sendPacketToAll(packet);
+        this.sendPacketToAll(new Packet6MoveEntity(entity, teleport));
     }
 
     public sendAllMovesToAllPlayers(): void {
-        const packet = new Packet6MoveEntity();
+        let index = 0;
+        let packet = new Packet6MoveEntity();
         this.server.getWorld().getEntities().forEach(entity => {
             if (entity instanceof EntityLiving) {
                 packet.push(entity, false);
+            }
+            if (++index % 5 === 0 && !packet.isEmpty()) {
+                this.sendPacketToAll(packet);
+                packet = new Packet6MoveEntity();
             }
         });
         if (!packet.isEmpty()) {

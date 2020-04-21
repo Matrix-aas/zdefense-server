@@ -19,14 +19,21 @@ interface EntityMoveData {
 export default class Packet6MoveEntity extends Packet {
     private moves: EntityMoveData[] = [];
 
-    public push(entityId?: number | Entity, position?: Point | boolean, speed?: number, headAngle?: number, moveAngle?: number, strafeAngle?: number, moving?: boolean, teleport?: boolean): void {
+    constructor(entityId?: number | Entity, position?: Point | boolean, speed?: number, headAngle?: number, moveAngle?: number, strafeAngle?: number, moving?: boolean, teleport?: boolean) {
+        super();
+        if (entityId) {
+            this.push(entityId, position, speed, headAngle, moveAngle, strafeAngle, moving, teleport);
+        }
+    }
+
+    public push(entityId: number | Entity, position?: Point | boolean, speed?: number, headAngle?: number, moveAngle?: number, strafeAngle?: number, moving?: boolean, teleport?: boolean): void {
         if (entityId instanceof Entity) {
             const _entityId = entityId.id;
             const _position = entityId.position.clone();
             let _speed = 0.0;
-            let _moveAngle = 0.0;
-            let _headAngle = 0.0;
-            let _strafeAngle = 0.0;
+            let _moveAngle = 0;
+            let _headAngle = 0;
+            let _strafeAngle = 0;
             let _moving = false;
             if (entityId instanceof EntityLiving) {
                 _speed = entityId.getDefaultSpeed();
@@ -75,9 +82,9 @@ export default class Packet6MoveEntity extends Packet {
                 entityId: buffer.readUInt(),
                 position: Point.createFromBuffer(buffer),
                 speed: buffer.readFloat32(),
-                headAngle: buffer.readFloat32(),
-                moveAngle: buffer.readFloat32(),
-                strafeAngle: buffer.readFloat32(),
+                headAngle: buffer.readUShort(),
+                moveAngle: buffer.readUShort(),
+                strafeAngle: buffer.readUShort(),
                 moving: buffer.readBoolean(),
                 teleport: buffer.readBoolean(),
             });
@@ -90,9 +97,9 @@ export default class Packet6MoveEntity extends Packet {
             buffer.writeUInt(move.entityId);
             move.position.writeToBuffer(buffer);
             buffer.writeFloat32(move.speed);
-            buffer.writeFloat32(move.headAngle);
-            buffer.writeFloat32(move.moveAngle);
-            buffer.writeFloat32(move.strafeAngle);
+            buffer.writeUShort(move.headAngle);
+            buffer.writeUShort(move.moveAngle);
+            buffer.writeUShort(move.strafeAngle);
             buffer.writeBoolean(move.moving);
             buffer.writeBoolean(move.teleport);
         }
